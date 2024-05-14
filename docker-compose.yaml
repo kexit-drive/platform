@@ -1,0 +1,71 @@
+version: "3.9"
+
+name: kexit
+
+services:
+
+#  eureka:
+#    image: zaranik/kexit-drive-eureka:latest
+#    restart: always
+#    ports:
+#      - "8761:8761"
+#    profiles:
+#      - prod
+#
+#  gateway:
+#    image: zaranik/kexit-drive-gateway:latest
+#    restart: always
+#    ports:
+#      - "80:80"
+#    profiles:
+#      - prod
+#    depends_on:
+#      eureka:
+#        condition: service_healthy
+#
+#  core:
+#    image: zaranik/kexit-drive-core:latest
+#    restart: always
+#    ports:
+#      - "8080:8080"
+#    profiles:
+#      - prod
+#    depends_on:
+#      mongo:
+#        condition: service_healthy
+#      eureka:
+#        condition: service_healthy
+
+  mongo:
+    image: mongo:6.0.3
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - ./data/mongo:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.9.7-management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./data/rabbit:/var/lib/rabbitmq
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: always
+    ports:
+      - "3000:3000"
